@@ -33,7 +33,7 @@ data "aws_ami" "ami" {
   owners = ["099720109477"]
 }
 
-module "puppet-node" {
+module "instance" {
   source              = "../"
   security_groups     = ["sg-064a964f60b3b4d6f"]
   instance_count      = var.instance_count
@@ -41,10 +41,5 @@ module "puppet-node" {
   instance_subnet_ids = ["subnet-0ae8b71b5b9926c31"]
   instance_type       = "t2.micro"
   key_pair            = var.key_pair
-  puppet_autosign_psk = data.pass_password.puppet_autosign_psk.data["puppet_autosign_psk"]
-  puppet_server       = "puppet.camptocamp.net"
-  puppet_caserver     = "puppetca.camptocamp.net"
-  puppet_role         = "base"
-  puppet_environment  = "staging4"
   ebs_optimized       = false
 }
