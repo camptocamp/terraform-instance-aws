@@ -27,14 +27,21 @@ output "this_instance_private_ip" {
 # API
 
 output "this_instance_public_ipv4" {
-  value = coalesce(aws_eip.this[*].public_ip, aws_instance.this[*].public_ip, [])
+  description = "Instance's public IPv4"
+  value       = coalesce(aws_eip.this[*].public_ip, aws_instance.this[*].public_ip, [])
 }
 
 output "this_instance_public_ipv6" {
-  value = coalesce(aws_instance.this[*].ipv6_addresses)
+  description = "Instance's IPv6"
+  value       = coalesce(aws_instance.this[*].ipv6_addresses)
 }
 
 output "this_instance_hostname" {
-  description = "Instances' hostname"
+  description = "Instance's hostname"
   value       = aws_instance.this[*].private_dns
+}
+
+output "this_instance_id" {
+  description = "Instance's ID"
+  value       = aws_instance.this[*].id
 }
