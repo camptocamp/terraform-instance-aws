@@ -1,52 +1,87 @@
 variable "instance_count" {
+  type    = number
   default = 1
 }
 
-variable "key_pair" {}
-
-variable "security_groups" {
-  default = []
+variable "key_pair" {
+  type = string
 }
 
-variable "instance_type" {}
-variable "instance_image" {}
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+
+######
+# EC2
+
+variable "instance_type" {
+  type = string
+}
+
+variable "ami" {
+  type = string
+}
 
 variable "additional_user_data" {
   default = "#cloud-config\n"
 }
 
-variable "eip" {
-  default = true
-}
-
-variable "ebs_optimized" {
-  default = true
-}
-
-variable "instance_subnet_ids" {
-  default = []
-}
-
-variable "instance_private_ips" {
-  default = []
-}
-
-variable "tags" {
-  default = {}
-}
-
-variable "root_size" {
-  default = "10"
-}
-
 variable "iam_instance_profile" {
+  type    = string
   default = ""
 }
 
 variable "source_dest_check" {
-  default = "true"
+  type    = bool
+  default = true
 }
 
-variable "public_ip" {
+########
+# Disks
+
+variable "ebs_optimized" {
+  type    = bool
   default = true
+}
+
+variable "root_size" {
+  type    = number
+  default = "10"
+}
+
+variable "additional_disks" {
+  type = list(object({
+    size = number
+    type = string
+  }))
+  default = []
+}
+
+##########
+# Network
+
+variable "public_ip" {
+  type    = bool
+  default = true
+}
+
+variable "eip" {
+  type    = bool
+  default = true
+}
+
+variable "subnet_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "private_ips" {
+  type    = list(string)
+  default = []
+}
+
+variable "security_groups" {
+  type    = list(string)
+  default = []
 }

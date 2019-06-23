@@ -39,17 +39,17 @@ EOF
 }
 
 locals {
-  private_ips_length = length(var.instance_private_ips)
+  private_ips_length = length(var.private_ips)
 }
 
 resource "aws_instance" "this" {
   count         = var.instance_count
-  ami           = var.instance_image
+  ami           = var.ami
   instance_type = var.instance_type
-  subnet_id     = var.instance_subnet_ids[count.index % length(var.instance_subnet_ids)]
+  subnet_id     = var.subnet_ids[count.index % length(var.subnet_ids)]
 
   # We use length(..)==0?1:var to avoid modulo: division by 0 error, because of https://github.com/hashicorp/hil/issues/50
-  private_ip             = (local.private_ips_length == 0 ? "" : element(split(" ", join(" ", var.instance_private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
+  private_ip             = (local.private_ips_length == 0 ? "" : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
   ebs_optimized          = var.ebs_optimized
   vpc_security_group_ids = var.security_groups
   key_name               = var.key_pair
@@ -71,10 +71,14 @@ resource "aws_instance" "this" {
   }
 }
 
+######
 # EIP
+
 resource "aws_eip" "this" {
   count = (var.eip ? var.instance_count : 0)
   vpc   = true
+
+  tags = var.tags
 }
 
 resource "aws_eip_association" "eip_assoc" {

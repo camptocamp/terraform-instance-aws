@@ -11,10 +11,6 @@ output "this_instance_private_dns" {
   value = aws_instance.this[*].private_dns
 }
 
-output "this_instance_id" {
-  value = aws_instance.this[*].id
-}
-
 output "this_instance_public_ip" {
   value = split(" ", (var.eip ? join(" ", aws_eip.this[*].public_ip) : (var.public_ip ? join(" ", aws_instance.this[*].public_ip) : join(" ", aws_instance.this[*].private_ip))))
 }

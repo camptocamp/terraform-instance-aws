@@ -34,12 +34,19 @@ data "aws_ami" "ami" {
 }
 
 module "instance" {
-  source              = "../"
-  security_groups     = ["sg-064a964f60b3b4d6f"]
-  instance_count      = var.instance_count
-  instance_image      = data.aws_ami.ami.id
-  instance_subnet_ids = ["subnet-0ae8b71b5b9926c31"]
-  instance_type       = "t2.micro"
-  key_pair            = var.key_pair
-  ebs_optimized       = false
+  source         = "../"
+  instance_count = var.instance_count
+  key_pair       = var.key_pair
+
+  security_groups = ["sg-064a964f60b3b4d6f"]
+  subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
+
+  ami           = data.aws_ami.ami.id
+  instance_type = "t2.micro"
+  ebs_optimized = false
+  eip           = false
+
+  tags = {
+    Name = "terraform-instance-aws testing"
+  }
 }
