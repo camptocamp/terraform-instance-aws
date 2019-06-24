@@ -12,6 +12,10 @@ variable "tags" {
   default = {}
 }
 
+variable "connection" {
+  default = {}
+}
+
 ######
 # EC2
 
@@ -37,8 +41,8 @@ variable "source_dest_check" {
   default = true
 }
 
-########
-# Disks
+##########
+# Volumes
 
 variable "ebs_optimized" {
   type    = bool
@@ -50,10 +54,14 @@ variable "root_size" {
   default = "10"
 }
 
-variable "additional_disks" {
+variable "additional_volumes" {
   type = list(object({
-    size = number
-    type = string
+    name        = string
+    size        = number
+    type        = string
+    device_name = string
+    mount_path  = string
+    fstype      = string
   }))
   default = []
 }

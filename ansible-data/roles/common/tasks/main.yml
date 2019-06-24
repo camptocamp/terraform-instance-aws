@@ -1,0 +1,13 @@
+- name: Format disks
+  filesystem:
+    fstype: "{{ item.fstype }}"
+    dev: "{{ item.device }}"
+  with_items: "{{ disks }}"
+
+- name: Mount disks
+  mount:
+    path: "{{ item.mount_path }}"
+    src: "{{ item.device }}"
+    fstype: "{{ item.fstype }}"
+    state: mounted
+  with_items: "{{ disks }}"

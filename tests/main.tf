@@ -14,7 +14,7 @@ data "pass_password" "puppet_autosign_psk" {
 # Code to test
 #
 variable "instance_count" {
-  default = 1
+  default = 2
 }
 
 data "aws_ami" "ami" {
@@ -45,6 +45,24 @@ module "instance" {
   instance_type = "t2.micro"
   ebs_optimized = false
   eip           = false
+  additional_volumes = [
+    {
+      name        = "foo"
+      type        = "gp2"
+      size        = 10
+      device_name = "/dev/xvdh"
+      mount_path  = "/mnt/foo"
+      fstype      = "ext4"
+    },
+    {
+      name        = "bar"
+      type        = "gp2"
+      size        = 10
+      device_name = "/dev/xvdi"
+      mount_path  = "/mnt/bar"
+      fstype      = "ext4"
+    }
+  ]
 
   tags = {
     Name = "terraform-instance-aws testing"
