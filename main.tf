@@ -111,6 +111,7 @@ resource "aws_volume_attachment" "this" {
   volume_id    = aws_ebs_volume.this[count.index].id
   instance_id  = aws_instance.this[floor(count.index / var.instance_count)].id
   skip_destroy = false # /!\
+  force_detach = true
 
   lifecycle {
     ignore_changes = ["instance_id", "volume_id", "skip_destroy"]

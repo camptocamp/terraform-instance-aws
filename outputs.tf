@@ -24,7 +24,7 @@ output "this_instance_private_ip" {
 
 output "this_instance_public_ipv4" {
   description = "Instance's public IPv4"
-  value       = coalesce(aws_eip.this[*].public_ip, aws_instance.this[*].public_ip, [])
+  value       = split(" ", (var.eip ? join(" ", aws_eip.this[*].public_ip) : (var.public_ip ? join(" ", aws_instance.this[*].public_ip) : join(" ", aws_instance.this[*].private_ip))))
 }
 
 output "this_instance_public_ipv6" {

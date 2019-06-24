@@ -45,6 +45,7 @@ module "instance" {
   instance_type = "t2.micro"
   ebs_optimized = false
   eip           = false
+
   additional_volumes = [
     {
       name        = "foo"
