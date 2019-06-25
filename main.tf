@@ -53,7 +53,7 @@ resource "aws_instance" "this" {
   ebs_optimized          = var.ebs_optimized
   vpc_security_group_ids = var.security_groups
   key_name               = var.key_pair
-  monitoring             = true
+  monitoring             = var.monitoring
   iam_instance_profile   = var.iam_instance_profile
   user_data              = data.template_cloudinit_config.config[count.index].rendered
   source_dest_check      = var.source_dest_check

@@ -41,6 +41,12 @@ variable "source_dest_check" {
   default = true
 }
 
+variable "monitoring" {
+  description = "If true, the launched EC2 instance will have detailed monitoring enabled."
+  type        = bool
+  default     = true
+}
+
 ##########
 # Volumes
 
