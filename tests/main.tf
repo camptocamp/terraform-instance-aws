@@ -48,24 +48,63 @@ module "instance" {
 
   additional_volumes = [
     {
-      name        = "foo"
+      name        = "docker"
       type        = "gp2"
       size        = 10
-      device_name = "/dev/xvdh"
-      mount_path  = "/mnt/foo"
-      fstype      = "ext4"
-    },
-    {
-      name        = "bar"
-      type        = "gp2"
-      size        = 10
-      device_name = "/dev/xvdi"
-      mount_path  = "/mnt/bar"
+      device_name = "/dev/xvdp"
+      mount_path  = "/var/lib/docker"
       fstype      = "ext4"
     }
   ]
 
   tags = {
     Name = "terraform-instance-aws testing"
+  }
+
+  puppet = {
+    autosign_psk = data.pass_password.puppet_autosign_psk.data["puppet_autosign_psk"]
+    server       = "puppet.camptocamp.net"
+    caserver     = "puppetca.camptocamp.net"
+    role         = "base"
+    environment  = "staging4"
+  }
+
+  rancher = {
+    environment_id = "1a5"
+    host_labels = {
+      foo = "bar"
+      bar = "baz"
+    }
+  }
+}
+
+###
+# Acceptance test
+#
+resource "null_resource" "acceptance" {
+  count      = var.instance_count
+  depends_on = ["module.instance"]
+
+  connection {
+    host = coalesce(module.instance.this_instance_public_ipv4[count.index], (length(module.instance.this_instance_public_ipv6[count.index]) > 0 ? module.instance.this_instance_public_ipv6[count.index][0] : ""))
+    type = "ssh"
+    user = "root"
+  }
+
+  provisioner "file" {
+    source      = "script.sh"
+    destination = "/tmp/script.sh"
+  }
+
+  provisioner "file" {
+    source      = "goss.yaml"
+    destination = "/root/goss.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/script.sh",
+      "sudo /tmp/script.sh",
+    ]
   }
 }

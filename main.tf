@@ -94,22 +94,22 @@ resource "aws_ebs_volume" "this" {
   count = length(var.additional_volumes) * var.instance_count
 
   availability_zone = aws_instance.this[count.index % var.instance_count].availability_zone
-  size              = var.additional_volumes[count.index % var.instance_count].size
-  type              = var.additional_volumes[count.index % var.instance_count].type
+  size              = var.additional_volumes[floor(count.index / var.instance_count)].size
+  type              = var.additional_volumes[floor(count.index / var.instance_count)].type
 
   lifecycle {
     ignore_changes = ["type"]
   }
 
-  tags = merge(var.tags, { Name = "${var.additional_volumes[count.index % var.instance_count].name} - ${var.tags.Name}" })
+  tags = merge(var.tags, { Name = "${var.additional_volumes[floor(count.index / var.instance_count)].name} - ${var.tags.Name}" })
 }
 
 resource "aws_volume_attachment" "this" {
   count = length(var.additional_volumes) * var.instance_count
 
-  device_name  = var.additional_volumes[count.index % var.instance_count].device_name
+  device_name  = var.additional_volumes[floor(count.index / var.instance_count)].device_name
   volume_id    = aws_ebs_volume.this[count.index].id
-  instance_id  = aws_instance.this[floor(count.index / var.instance_count)].id
+  instance_id  = aws_instance.this[count.index % var.instance_count].id
   skip_destroy = false # /!\
   force_detach = true
 
@@ -169,4 +169,58 @@ resource "null_resource" "provisioner" {
       }
     }
   }
+}
+
+#########
+# Puppet
+
+module "puppet-node" {
+  source         = "git::ssh://git@github.com/camptocamp/terraform-puppet-node.git"
+  instance_count = var.puppet == null ? 0 : var.instance_count
+
+  instances = [
+    for i in range(length(aws_instance.this)) :
+    {
+      hostname = aws_instance.this[i].private_dns
+      connection = {
+        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+      }
+    }
+  ]
+
+  puppet = var.puppet
+
+  deps_on = null_resource.provisioner[*].id
+}
+
+##########
+# Rancher
+
+module "rancher-host" {
+  source         = "git::ssh://git@github.com/camptocamp/terraform-rancher-host.git"
+  instance_count = var.rancher == null ? 0 : var.instance_count
+
+  instances = [
+    for i in range(length(aws_instance.this)) :
+    {
+      hostname = aws_instance.this[i].private_dns
+      connection = {
+        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+      }
+      host_labels = merge(
+        var.rancher != null ? var.rancher.host_labels : {},
+        {
+          "io.rancher.host.os"              = "linux"
+          "io.rancher.host.provider"        = "aws"
+          "io.rancher.host.region"          = var.region
+          "io.rancher.host.zone"            = aws_instance.this[i].availability_zone
+          "io.rancher.host.external_dns_ip" = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        }
+      )
+    }
+  ]
+
+  environment_id = var.rancher != null ? var.rancher.environment_id : ""
+
+  deps_on = var.puppet != null ? module.puppet-node.this_provisioner_id : []
 }
