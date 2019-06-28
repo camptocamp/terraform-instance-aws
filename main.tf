@@ -181,6 +181,7 @@ resource "null_resource" "provisioner" {
       groups = ["instance"]
       become = true
       diff = true
+      check = var.ansible_check
 
       extra_vars = {
         disks = jsonencode([

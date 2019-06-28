@@ -21,6 +21,11 @@ variable "region" {
   default = ""
 }
 
+variable "ansible_check" {
+  type    = bool
+  default = false
+}
+
 ######
 # EC2
 
