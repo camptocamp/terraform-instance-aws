@@ -39,7 +39,8 @@ EOF
 }
 
 locals {
-  private_ips_length = length(var.private_ips)
+  private_ips_length  = length(var.private_ips)
+  nvme_instance_types = ["m5", "c5"]
 }
 
 resource "aws_iam_role" "this" {
@@ -186,7 +187,7 @@ resource "null_resource" "provisioner" {
           for disk in var.additional_volumes :
           {
             fstype = disk.fstype
-            device = disk.device_name
+            device = disk.device_name == "/dev/xvdp" && contains(local.nvme_instance_types, substr(var.instance_type, 0, 2)) == true ? "/dev/nvme1n1" : disk.device_name
             mount_path = disk.mount_path
           }
         ])
