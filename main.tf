@@ -207,7 +207,7 @@ module "puppet-node" {
   instances = [
     for i in range(length(aws_instance.this)) :
     {
-      hostname = aws_instance.this[i].private_dns
+      hostname = split(".", aws_instance.this[i].private_dns)[0]
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
       }
@@ -229,7 +229,7 @@ module "rancher-host" {
   instances = [
     for i in range(length(aws_instance.this)) :
     {
-      hostname = aws_instance.this[i].private_dns
+      hostname = split(".", aws_instance.this[i].private_dns)[0]
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
       }
