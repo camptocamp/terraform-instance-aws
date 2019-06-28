@@ -3,7 +3,7 @@
   gather_facts: false
   pre_tasks:
     - name: Install Python
-      raw: bash -c "test -e /usr/bin/python || (yum -y update && yum install -y python) || (apt -y update && apt install -y python-minimal)"
+      raw: bash -c "test -e /usr/bin/python || (yum -y update && yum install -y python) || (apt -y update && apt install -y python)"
       retries: 3
       delay: 5
       register: result
