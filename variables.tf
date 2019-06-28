@@ -125,12 +125,6 @@ variable "rancher" {
 # Puppet
 
 variable "puppet" {
-  type = object({
-    server       = string
-    role         = string
-    environment  = string
-    caserver     = string
-    autosign_psk = string
-  })
+  type    = map(string)
   default = null
 }
