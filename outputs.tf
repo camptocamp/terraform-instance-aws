@@ -19,6 +19,14 @@ output "this_instance_private_ip" {
   value = aws_instance.this[*].private_ip
 }
 
+output "this_role_id" {
+  value = aws_iam_role.this.id
+}
+
+output "this_role_arn" {
+  value = aws_iam_role.this.arn
+}
+
 ######
 # API
 
