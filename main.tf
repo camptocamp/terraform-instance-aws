@@ -236,6 +236,7 @@ module "rancher-host" {
     for i in range(length(aws_instance.this)) :
     {
       hostname = aws_instance.this[i].private_dns
+      agent_ip = aws_instance.this[i].private_ip
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
       }
