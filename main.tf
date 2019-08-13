@@ -209,7 +209,6 @@ module "puppet-node" {
     {
       hostname = aws_instance.this[i].private_dns
       connection = {
-        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
         type = lookup(var.connection, "type", null)
         user = lookup(var.connection, "user", "terraform")
