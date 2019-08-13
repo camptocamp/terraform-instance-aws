@@ -211,6 +211,26 @@ module "puppet-node" {
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        type = lookup(var.connection, "type", null)
+        user = lookup(var.connection, "user", "terraform")
+        password = lookup(var.connection, "password", null)
+        port = lookup(var.connection, "port", 22)
+        timeout = lookup(var.connection, "timeout", "")
+        script_path = lookup(var.connection, "script_path", null)
+        private_key = lookup(var.connection, "private_key", null)
+        agent = lookup(var.connection, "agent", null)
+        agent_identity = lookup(var.connection, "agent_identity", null)
+        host_key = lookup(var.connection, "host_key", null)
+        https = lookup(var.connection, "https", false)
+        insecure = lookup(var.connection, "insecure", false)
+        use_ntlm = lookup(var.connection, "use_ntlm", false)
+        cacert = lookup(var.connection, "cacert", null)
+        bastion_host = lookup(var.connection, "bastion_host", null)
+        bastion_host_key = lookup(var.connection, "bastion_host_key", null)
+        bastion_port = lookup(var.connection, "bastion_port", 22)
+        bastion_user = lookup(var.connection, "bastion_user", null)
+        bastion_password = lookup(var.connection, "bastion_password", null)
+        bastion_private_key = lookup(var.connection, "bastion_private_key", null)
       }
     }
   ]
@@ -240,6 +260,26 @@ module "rancher-host" {
       agent_ip = aws_instance.this[i].private_ip
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        type = lookup(var.connection, "type", null)
+        user = lookup(var.connection, "user", "terraform")
+        password = lookup(var.connection, "password", null)
+        port = lookup(var.connection, "port", 22)
+        timeout = lookup(var.connection, "timeout", "")
+        script_path = lookup(var.connection, "script_path", null)
+        private_key = lookup(var.connection, "private_key", null)
+        agent = lookup(var.connection, "agent", null)
+        agent_identity = lookup(var.connection, "agent_identity", null)
+        host_key = lookup(var.connection, "host_key", null)
+        https = lookup(var.connection, "https", false)
+        insecure = lookup(var.connection, "insecure", false)
+        use_ntlm = lookup(var.connection, "use_ntlm", false)
+        cacert = lookup(var.connection, "cacert", null)
+        bastion_host = lookup(var.connection, "bastion_host", null)
+        bastion_host_key = lookup(var.connection, "bastion_host_key", null)
+        bastion_port = lookup(var.connection, "bastion_port", 22)
+        bastion_user = lookup(var.connection, "bastion_user", null)
+        bastion_password = lookup(var.connection, "bastion_password", null)
+        bastion_private_key = lookup(var.connection, "bastion_private_key", null)
       }
       host_labels = merge(
         var.rancher != null ? var.rancher.host_labels : {},
