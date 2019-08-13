@@ -151,7 +151,7 @@ resource "null_resource" "provisioner" {
     type = lookup(var.connection, "type", null)
     user = lookup(var.connection, "user", "terraform")
     password = lookup(var.connection, "password", null)
-    host = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[count.index].public_ip : ""), aws_instance.this[count.index].public_ip, compact(aws_instance.this[count.index].ipv6_addresses)...))
+    host = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[count.index].public_ip : ""), aws_instance.this[count.index].public_ip, var.public_ip ? "" : aws_instance.this[count.index].private_ip, compact(aws_instance.this[count.index].ipv6_addresses)...))
     port = lookup(var.connection, "port", 22)
     timeout = lookup(var.connection, "timeout", "")
     script_path = lookup(var.connection, "script_path", null)
@@ -210,6 +210,7 @@ module "puppet-node" {
       hostname = aws_instance.this[i].private_dns
       connection = {
         host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
       }
     }
   ]
@@ -238,7 +239,7 @@ module "rancher-host" {
       hostname = aws_instance.this[i].private_dns
       agent_ip = aws_instance.this[i].private_ip
       connection = {
-        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
       }
       host_labels = merge(
         var.rancher != null ? var.rancher.host_labels : {},
@@ -247,7 +248,7 @@ module "rancher-host" {
           "io.rancher.host.provider" = "aws"
           "io.rancher.host.region" = var.region
           "io.rancher.host.zone" = aws_instance.this[i].availability_zone
-          "io.rancher.host.external_dns_ip" = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+          "io.rancher.host.external_dns_ip" = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
         }
       )
     }
