@@ -26,6 +26,11 @@ variable "ansible_check" {
   default = false
 }
 
+variable "vpc" {
+  type    = bool
+  default = true
+}
+
 ######
 # EC2
 
