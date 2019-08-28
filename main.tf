@@ -17,16 +17,16 @@ EOF
   }
 
   part {
-    filename = "additional.cfg"
-    merge_type = "list(append)+dict(recurse_array)+str()"
+    filename     = "additional.cfg"
+    merge_type   = "list(append)+dict(recurse_array)+str()"
     content_type = "text/cloud-config"
-    content = "${var.additional_user_data}"
+    content      = "${var.additional_user_data}"
   }
 
   # EBS are not always available at boot time
   part {
-    filename = "mountall.cfg"
-    merge_type = "list(append)+dict(recurse_array)+str()"
+    filename     = "mountall.cfg"
+    merge_type   = "list(append)+dict(recurse_array)+str()"
     content_type = "text/cloud-config"
 
     content = <<EOF
@@ -68,21 +68,21 @@ resource "aws_iam_instance_profile" "this" {
 }
 
 resource "aws_instance" "this" {
-  count = var.instance_count
-  ami = var.ami
+  count         = var.instance_count
+  ami           = var.ami
   instance_type = var.instance_type
-  subnet_id = var.subnet_ids[count.index % length(var.subnet_ids)]
+  subnet_id     = length(var.subnet_ids) > 0 ? var.subnet_ids[count.index % length(var.subnet_ids)] : null
 
   # We use length(..)==0?1:var to avoid modulo: division by 0 error, because of https://github.com/hashicorp/hil/issues/50
-  private_ip = (local.private_ips_length == 0 ? "" : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
-  ebs_optimized = var.ebs_optimized
+  private_ip             = (local.private_ips_length == 0 ? "" : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
+  ebs_optimized          = var.ebs_optimized
   vpc_security_group_ids = var.security_groups
-  key_name = var.key_pair
-  monitoring = var.monitoring
-  iam_instance_profile = coalesce(var.iam_instance_profile, aws_iam_instance_profile.this.id)
-  user_data = data.template_cloudinit_config.config[count.index].rendered
-  source_dest_check = var.source_dest_check
-  tags = var.tags
+  key_name               = var.key_pair
+  monitoring             = var.monitoring
+  iam_instance_profile   = coalesce(var.iam_instance_profile, aws_iam_instance_profile.this.id)
+  user_data              = data.template_cloudinit_config.config[count.index].rendered
+  source_dest_check      = var.source_dest_check
+  tags                   = var.tags
 
   associate_public_ip_address = (var.public_ip || var.eip ? true : false)
 
@@ -101,14 +101,14 @@ resource "aws_instance" "this" {
 
 resource "aws_eip" "this" {
   count = (var.eip ? var.instance_count : 0)
-  vpc = true
+  vpc   = true
 
   tags = var.tags
 }
 
 resource "aws_eip_association" "eip_assoc" {
-  count = (var.eip ? var.instance_count : 0)
-  instance_id = aws_instance.this[count.index].id
+  count         = (var.eip ? var.instance_count : 0)
+  instance_id   = aws_instance.this[count.index].id
   allocation_id = aws_eip.this[count.index].id
 }
 
@@ -119,8 +119,8 @@ resource "aws_ebs_volume" "this" {
   count = length(var.additional_volumes) * var.instance_count
 
   availability_zone = aws_instance.this[count.index % var.instance_count].availability_zone
-  size = var.additional_volumes[floor(count.index / var.instance_count)].size
-  type = var.additional_volumes[floor(count.index / var.instance_count)].type
+  size              = var.additional_volumes[floor(count.index / var.instance_count)].size
+  type              = var.additional_volumes[floor(count.index / var.instance_count)].type
 
   lifecycle {
     ignore_changes = ["type"]
@@ -132,9 +132,9 @@ resource "aws_ebs_volume" "this" {
 resource "aws_volume_attachment" "this" {
   count = length(var.additional_volumes) * var.instance_count
 
-  device_name = var.additional_volumes[floor(count.index / var.instance_count)].device_name
-  volume_id = aws_ebs_volume.this[count.index].id
-  instance_id = aws_instance.this[count.index % var.instance_count].id
+  device_name  = var.additional_volumes[floor(count.index / var.instance_count)].device_name
+  volume_id    = aws_ebs_volume.this[count.index].id
+  instance_id  = aws_instance.this[count.index % var.instance_count].id
   skip_destroy = false # /!\
   force_detach = true
 
@@ -144,51 +144,51 @@ resource "aws_volume_attachment" "this" {
 }
 
 resource "null_resource" "provisioner" {
-  count = var.instance_count
+  count      = var.instance_count
   depends_on = ["aws_instance.this", "aws_volume_attachment.this"]
 
   connection {
-    type = lookup(var.connection, "type", null)
-    user = lookup(var.connection, "user", "terraform")
-    password = lookup(var.connection, "password", null)
-    host = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[count.index].public_ip : ""), aws_instance.this[count.index].public_ip, var.public_ip ? "" : aws_instance.this[count.index].private_ip, compact(aws_instance.this[count.index].ipv6_addresses)...))
-    port = lookup(var.connection, "port", 22)
-    timeout = lookup(var.connection, "timeout", "")
-    script_path = lookup(var.connection, "script_path", null)
-    private_key = lookup(var.connection, "private_key", null)
-    agent = lookup(var.connection, "agent", null)
-    agent_identity = lookup(var.connection, "agent_identity", null)
-    host_key = lookup(var.connection, "host_key", null)
-    https = lookup(var.connection, "https", false)
-    insecure = lookup(var.connection, "insecure", false)
-    use_ntlm = lookup(var.connection, "use_ntlm", false)
-    cacert = lookup(var.connection, "cacert", null)
-    bastion_host = lookup(var.connection, "bastion_host", null)
-    bastion_host_key = lookup(var.connection, "bastion_host_key", null)
-    bastion_port = lookup(var.connection, "bastion_port", 22)
-    bastion_user = lookup(var.connection, "bastion_user", null)
-    bastion_password = lookup(var.connection, "bastion_password", null)
+    type                = lookup(var.connection, "type", null)
+    user                = lookup(var.connection, "user", "terraform")
+    password            = lookup(var.connection, "password", null)
+    host                = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[count.index].public_ip : ""), aws_instance.this[count.index].public_ip, var.public_ip ? "" : aws_instance.this[count.index].private_ip, compact(aws_instance.this[count.index].ipv6_addresses)...))
+    port                = lookup(var.connection, "port", 22)
+    timeout             = lookup(var.connection, "timeout", "")
+    script_path         = lookup(var.connection, "script_path", null)
+    private_key         = lookup(var.connection, "private_key", null)
+    agent               = lookup(var.connection, "agent", null)
+    agent_identity      = lookup(var.connection, "agent_identity", null)
+    host_key            = lookup(var.connection, "host_key", null)
+    https               = lookup(var.connection, "https", false)
+    insecure            = lookup(var.connection, "insecure", false)
+    use_ntlm            = lookup(var.connection, "use_ntlm", false)
+    cacert              = lookup(var.connection, "cacert", null)
+    bastion_host        = lookup(var.connection, "bastion_host", null)
+    bastion_host_key    = lookup(var.connection, "bastion_host_key", null)
+    bastion_port        = lookup(var.connection, "bastion_port", 22)
+    bastion_user        = lookup(var.connection, "bastion_user", null)
+    bastion_password    = lookup(var.connection, "bastion_password", null)
     bastion_private_key = lookup(var.connection, "bastion_private_key", null)
   }
 
   provisioner "ansible" {
     plays {
       playbook {
-        file_path = "${path.module}/ansible-data/playbooks/instance.yml"
+        file_path  = "${path.module}/ansible-data/playbooks/instance.yml"
         roles_path = ["${path.module}/ansible-data/roles"]
       }
 
       groups = ["instance"]
       become = true
-      diff = true
-      check = var.ansible_check
+      diff   = true
+      check  = var.ansible_check
 
       extra_vars = {
         disks = jsonencode([
           for disk in var.additional_volumes :
           {
-            fstype = disk.fstype
-            device = disk.device_name == "/dev/xvdp" && contains(local.nvme_instance_types, substr(var.instance_type, 0, 2)) == true ? "/dev/nvme1n1" : disk.device_name
+            fstype     = disk.fstype
+            device     = disk.device_name == "/dev/xvdp" && contains(local.nvme_instance_types, substr(var.instance_type, 0, 2)) == true ? "/dev/nvme1n1" : disk.device_name
             mount_path = disk.mount_path
           }
         ])
@@ -201,7 +201,7 @@ resource "null_resource" "provisioner" {
 # Puppet
 
 module "puppet-node" {
-  source = "git::ssh://git@github.com/camptocamp/terraform-puppet-node.git"
+  source         = "git::ssh://git@github.com/camptocamp/terraform-puppet-node.git"
   instance_count = var.puppet == null ? 0 : var.instance_count
 
   instances = [
@@ -209,38 +209,38 @@ module "puppet-node" {
     {
       hostname = aws_instance.this[i].private_dns
       connection = {
-        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
-        type = lookup(var.connection, "type", null)
-        user = lookup(var.connection, "user", "terraform")
-        password = lookup(var.connection, "password", null)
-        port = lookup(var.connection, "port", 22)
-        timeout = lookup(var.connection, "timeout", "")
-        script_path = lookup(var.connection, "script_path", null)
-        private_key = lookup(var.connection, "private_key", null)
-        agent = lookup(var.connection, "agent", null)
-        agent_identity = lookup(var.connection, "agent_identity", null)
-        host_key = lookup(var.connection, "host_key", null)
-        https = lookup(var.connection, "https", false)
-        insecure = lookup(var.connection, "insecure", false)
-        use_ntlm = lookup(var.connection, "use_ntlm", false)
-        cacert = lookup(var.connection, "cacert", null)
-        bastion_host = lookup(var.connection, "bastion_host", null)
-        bastion_host_key = lookup(var.connection, "bastion_host_key", null)
-        bastion_port = lookup(var.connection, "bastion_port", 22)
-        bastion_user = lookup(var.connection, "bastion_user", null)
-        bastion_password = lookup(var.connection, "bastion_password", null)
+        host                = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        type                = lookup(var.connection, "type", null)
+        user                = lookup(var.connection, "user", "terraform")
+        password            = lookup(var.connection, "password", null)
+        port                = lookup(var.connection, "port", 22)
+        timeout             = lookup(var.connection, "timeout", "")
+        script_path         = lookup(var.connection, "script_path", null)
+        private_key         = lookup(var.connection, "private_key", null)
+        agent               = lookup(var.connection, "agent", null)
+        agent_identity      = lookup(var.connection, "agent_identity", null)
+        host_key            = lookup(var.connection, "host_key", null)
+        https               = lookup(var.connection, "https", false)
+        insecure            = lookup(var.connection, "insecure", false)
+        use_ntlm            = lookup(var.connection, "use_ntlm", false)
+        cacert              = lookup(var.connection, "cacert", null)
+        bastion_host        = lookup(var.connection, "bastion_host", null)
+        bastion_host_key    = lookup(var.connection, "bastion_host_key", null)
+        bastion_port        = lookup(var.connection, "bastion_port", 22)
+        bastion_user        = lookup(var.connection, "bastion_user", null)
+        bastion_password    = lookup(var.connection, "bastion_password", null)
         bastion_private_key = lookup(var.connection, "bastion_private_key", null)
       }
     }
   ]
 
-  server_address = lookup(var.puppet, "server_address", null)
-  server_port = lookup(var.puppet, "server_port", 443)
+  server_address    = lookup(var.puppet, "server_address", null)
+  server_port       = lookup(var.puppet, "server_port", 443)
   ca_server_address = lookup(var.puppet, "ca_server_address", null)
-  ca_server_port = lookup(var.puppet, "ca_server_port", 443)
-  environment = lookup(var.puppet, "environment", null)
-  role = lookup(var.puppet, "role", null)
-  autosign_psk = lookup(var.puppet, "autosign_psk", null)
+  ca_server_port    = lookup(var.puppet, "ca_server_port", 443)
+  environment       = lookup(var.puppet, "environment", null)
+  role              = lookup(var.puppet, "role", null)
+  autosign_psk      = lookup(var.puppet, "autosign_psk", null)
 
   deps_on = null_resource.provisioner[*].id
 }
@@ -249,7 +249,7 @@ module "puppet-node" {
 # Rancher
 
 module "rancher-host" {
-  source = "git::ssh://git@github.com/camptocamp/terraform-rancher-host.git"
+  source         = "git::ssh://git@github.com/camptocamp/terraform-rancher-host.git"
   instance_count = var.rancher == null ? 0 : var.instance_count
 
   instances = [
@@ -258,35 +258,35 @@ module "rancher-host" {
       hostname = aws_instance.this[i].private_dns
       agent_ip = aws_instance.this[i].private_ip
       connection = {
-        host = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
-        type = lookup(var.connection, "type", null)
-        user = lookup(var.connection, "user", "terraform")
-        password = lookup(var.connection, "password", null)
-        port = lookup(var.connection, "port", 22)
-        timeout = lookup(var.connection, "timeout", "")
-        script_path = lookup(var.connection, "script_path", null)
-        private_key = lookup(var.connection, "private_key", null)
-        agent = lookup(var.connection, "agent", null)
-        agent_identity = lookup(var.connection, "agent_identity", null)
-        host_key = lookup(var.connection, "host_key", null)
-        https = lookup(var.connection, "https", false)
-        insecure = lookup(var.connection, "insecure", false)
-        use_ntlm = lookup(var.connection, "use_ntlm", false)
-        cacert = lookup(var.connection, "cacert", null)
-        bastion_host = lookup(var.connection, "bastion_host", null)
-        bastion_host_key = lookup(var.connection, "bastion_host_key", null)
-        bastion_port = lookup(var.connection, "bastion_port", 22)
-        bastion_user = lookup(var.connection, "bastion_user", null)
-        bastion_password = lookup(var.connection, "bastion_password", null)
+        host                = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
+        type                = lookup(var.connection, "type", null)
+        user                = lookup(var.connection, "user", "terraform")
+        password            = lookup(var.connection, "password", null)
+        port                = lookup(var.connection, "port", 22)
+        timeout             = lookup(var.connection, "timeout", "")
+        script_path         = lookup(var.connection, "script_path", null)
+        private_key         = lookup(var.connection, "private_key", null)
+        agent               = lookup(var.connection, "agent", null)
+        agent_identity      = lookup(var.connection, "agent_identity", null)
+        host_key            = lookup(var.connection, "host_key", null)
+        https               = lookup(var.connection, "https", false)
+        insecure            = lookup(var.connection, "insecure", false)
+        use_ntlm            = lookup(var.connection, "use_ntlm", false)
+        cacert              = lookup(var.connection, "cacert", null)
+        bastion_host        = lookup(var.connection, "bastion_host", null)
+        bastion_host_key    = lookup(var.connection, "bastion_host_key", null)
+        bastion_port        = lookup(var.connection, "bastion_port", 22)
+        bastion_user        = lookup(var.connection, "bastion_user", null)
+        bastion_password    = lookup(var.connection, "bastion_password", null)
         bastion_private_key = lookup(var.connection, "bastion_private_key", null)
       }
       host_labels = merge(
         var.rancher != null ? var.rancher.host_labels : {},
         {
-          "io.rancher.host.os" = "linux"
-          "io.rancher.host.provider" = "aws"
-          "io.rancher.host.region" = var.region
-          "io.rancher.host.zone" = aws_instance.this[i].availability_zone
+          "io.rancher.host.os"              = "linux"
+          "io.rancher.host.provider"        = "aws"
+          "io.rancher.host.region"          = var.region
+          "io.rancher.host.zone"            = aws_instance.this[i].availability_zone
           "io.rancher.host.external_dns_ip" = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip, compact(aws_instance.this[i].ipv6_addresses)...)
         }
       )
