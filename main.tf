@@ -102,7 +102,9 @@ resource "aws_instance" "this" {
 
 resource "aws_eip" "this" {
   count = (var.eip ? var.instance_count : 0)
-  vpc   = true
+  vpc   = var.vpc
+
+  instance = var.vpc ? null : aws_instance.this[count.index].id
 
   tags = var.tags
 }
