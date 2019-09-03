@@ -104,15 +104,14 @@ resource "aws_eip" "this" {
   count = (var.eip ? var.instance_count : 0)
   vpc   = var.vpc
 
-  instance = var.vpc ? null : aws_instance.this[count.index].id
-
-  tags = var.tags
+  tags = var.vpc ? var.tags : null
 }
 
 resource "aws_eip_association" "eip_assoc" {
   count         = (var.eip ? var.instance_count : 0)
   instance_id   = aws_instance.this[count.index].id
-  allocation_id = aws_eip.this[count.index].id
+  allocation_id = var.vpc ? aws_eip.this[count.index].id : null
+  public_ip     = var.vpc ? null : aws_instance.this[count.index].id
 }
 
 ##########
