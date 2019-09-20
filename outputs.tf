@@ -2,9 +2,8 @@ output "this_instance_availability_zone" {
   value = aws_instance.this[*].availability_zone
 }
 
-# The public_dns is missing in aws_eip
 output "this_instance_public_dns" {
-  value = split(" ", var.eip ? "" : var.public_ip ? join(" ", aws_instance.this[*].public_dns) : join(" ", aws_instance.this[*].private_dns))
+  value = var.eip ? aws_eip.this[*].public_dns : var.public_ip ? aws_instance.this[*].public_dns : aws_instance.this[*].private_dns
 }
 
 output "this_instance_private_dns" {
