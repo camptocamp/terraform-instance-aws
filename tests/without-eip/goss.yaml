@@ -1,0 +1,40 @@
+port:
+  tcp:22:
+    listening: true
+    ip:
+    - 0.0.0.0
+  tcp6:22:
+    listening: true
+    ip:
+    - '::'
+
+package:
+  docker-ce:
+    installed: true
+
+service:
+  docker:
+    enabled: true
+    running: true
+
+mount:
+  /var/lib/docker:
+    exists: true
+    source: /dev/xvdp
+    filesystem: ext4
+
+command:
+  docker info:
+    exit-status: 0
+    stdout:
+      - "Storage Driver: overlay2"
+      - "Logging Driver: journald"
+
+file:
+  /root/.ssh/authorized_keys:
+    exists: true
+    contains:
+      - puppet
+  /var/lib/docker/volumes:
+    exists: true
+    filetype: directory
