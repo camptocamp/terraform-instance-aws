@@ -38,7 +38,7 @@ module "instance" {
   instance_count = var.instance_count
   key_pair       = var.key_pair
 
-  security_groups = ["sg-064a964f60b3b4d6f"]
+  security_groups = []
   subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
 
   ami           = data.aws_ami.ami.id
