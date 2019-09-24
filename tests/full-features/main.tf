@@ -10,6 +10,10 @@ data "pass_password" "puppet_autosign_psk" {
   path = "terraform/c2c_mgmtsrv/puppet_autosign_psk"
 }
 
+data "pass_password" "ssh_key" {
+  path = "terraform/ssh/terraform"
+}
+
 ###
 # Code to test
 #
@@ -63,7 +67,7 @@ resource "aws_security_group" "tf_testing" {
 module "instance" {
   source         = "../../"
   instance_count = var.instance_count
-  key_pair       = var.key_pair
+  key_pair       = "terraform"
 
   security_groups = [aws_security_group.tf_testing.id]
   subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
@@ -102,55 +106,11 @@ module "instance" {
       bar = "baz"
     }
   }
-}
 
-#module "instance_private" {
-#  source         = "../"
-#  instance_count = var.instance_count
-#  key_pair       = var.key_pair
-#
-#  security_groups = ["sg-064a964f60b3b4d6f"]
-#  subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
-#
-#  public_ip     = false
-#  eip           = false
-#
-#  ami           = data.aws_ami.ami.id
-#  instance_type = "t2.micro"
-#  ebs_optimized = false
-#  eip           = false
-#
-#  additional_volumes = [
-#    {
-#      name        = "docker"
-#      type        = "gp2"
-#      size        = 10
-#      device_name = "/dev/xvdp"
-#      mount_path  = "/var/lib/docker"
-#      fstype      = "ext4"
-#    }
-#  ]
-#
-#  tags = {
-#    Name = "terraform-instance-aws testing"
-#  }
-#
-#  puppet = {
-#    autosign_psk = data.pass_password.puppet_autosign_psk.data["puppet_autosign_psk"]
-#    server       = "puppet.camptocamp.net"
-#    caserver     = "puppetca.camptocamp.net"
-#    role         = "base"
-#    environment  = "staging4"
-#  }
-#
-#  rancher = {
-#    environment_id = "1a5"
-#    host_labels = {
-#      foo = "bar"
-#      bar = "baz"
-#    }
-#  }
-#}
+  connection = {
+    private_key = data.pass_password.ssh_key.data["id_rsa"]
+  }
+}
 
 ###
 # Acceptance test
@@ -160,9 +120,10 @@ resource "null_resource" "acceptance" {
   depends_on = ["module.instance"]
 
   connection {
-    host = coalesce(module.instance.this_instance_public_ipv4[count.index], (length(module.instance.this_instance_public_ipv6[count.index]) > 0 ? module.instance.this_instance_public_ipv6[count.index][0] : ""))
-    type = "ssh"
-    user = "root"
+    host        = coalesce(module.instance.this_instance_public_ipv4[count.index], (length(module.instance.this_instance_public_ipv6[count.index]) > 0 ? module.instance.this_instance_public_ipv6[count.index][0] : ""))
+    type        = "ssh"
+    user        = "terraform"
+    private_key = data.pass_password.ssh_key.data["id_rsa"]
   }
 
   provisioner "file" {
@@ -172,7 +133,7 @@ resource "null_resource" "acceptance" {
 
   provisioner "file" {
     source      = "goss.yaml"
-    destination = "/root/goss.yaml"
+    destination = "/home/terraform/goss.yaml"
   }
 
   provisioner "remote-exec" {
@@ -182,31 +143,3 @@ resource "null_resource" "acceptance" {
     ]
   }
 }
-
-#resource "null_resource" "acceptance_private" {
-#  count      = var.instance_count
-#  depends_on = ["module.instance_private"]
-#
-#  connection {
-#    host = module.instance.this_instance_private_ipv4[count.index]
-#    type = "ssh"
-#    user = "root"
-#  }
-#
-#  provisioner "file" {
-#    source      = "script.sh"
-#    destination = "/tmp/script.sh"
-#  }
-#
-#  provisioner "file" {
-#    source      = "goss.yaml"
-#    destination = "/root/goss.yaml"
-#  }
-#
-#  provisioner "remote-exec" {
-#    inline = [
-#      "chmod +x /tmp/script.sh",
-#      "sudo /tmp/script.sh",
-#    ]
-#  }
-#}

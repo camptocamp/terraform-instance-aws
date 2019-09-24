@@ -155,7 +155,7 @@ resource "null_resource" "provisioner" {
     password            = lookup(var.connection, "password", null)
     host                = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[count.index].public_ip : ""), aws_instance.this[count.index].public_ip, var.public_ip ? "" : aws_instance.this[count.index].private_ip))
     port                = lookup(var.connection, "port", 22)
-    timeout             = lookup(var.connection, "timeout", "")
+    timeout             = lookup(var.connection, "timeout", 60)
     script_path         = lookup(var.connection, "script_path", null)
     private_key         = lookup(var.connection, "private_key", null)
     agent               = lookup(var.connection, "agent", null)
@@ -196,6 +196,10 @@ resource "null_resource" "provisioner" {
         ])
       }
     }
+
+    ansible_ssh_settings {
+      connect_timeout_seconds = 60
+    }
   }
 }
 
@@ -216,7 +220,7 @@ module "puppet-node" {
         user                = lookup(var.connection, "user", "terraform")
         password            = lookup(var.connection, "password", null)
         port                = lookup(var.connection, "port", 22)
-        timeout             = lookup(var.connection, "timeout", "")
+        timeout             = lookup(var.connection, "timeout", 60)
         script_path         = lookup(var.connection, "script_path", null)
         private_key         = lookup(var.connection, "private_key", null)
         agent               = lookup(var.connection, "agent", null)
@@ -265,7 +269,7 @@ module "rancher-host" {
         user                = lookup(var.connection, "user", "terraform")
         password            = lookup(var.connection, "password", null)
         port                = lookup(var.connection, "port", 22)
-        timeout             = lookup(var.connection, "timeout", "")
+        timeout             = lookup(var.connection, "timeout", 60)
         script_path         = lookup(var.connection, "script_path", null)
         private_key         = lookup(var.connection, "private_key", null)
         agent               = lookup(var.connection, "agent", null)

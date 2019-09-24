@@ -14,6 +14,7 @@ before_script:
   - gopass terraform/ssh/terraform id_rsa.pub > ~/.ssh/id_rsa.pub
   - chmod 0600 ~/.ssh/id_rsa
   - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+  - echo -e "[defaults]\ntimeout = 90\n[ssh_connection]\ncontrol_path = none\n" > ~/.ansible.cfg
 
 test-full-features:
   script:

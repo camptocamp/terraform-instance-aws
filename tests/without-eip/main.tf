@@ -10,6 +10,10 @@ data "pass_password" "puppet_autosign_psk" {
   path = "terraform/c2c_mgmtsrv/puppet_autosign_psk"
 }
 
+data "pass_password" "ssh_key" {
+  path = "terraform/ssh/terraform"
+}
+
 ###
 # Code to test
 #
@@ -63,7 +67,7 @@ resource "aws_security_group" "tf_testing" {
 module "instance" {
   source         = "../../"
   instance_count = var.instance_count
-  key_pair       = var.key_pair
+  key_pair       = "terraform"
 
   security_groups = [aws_security_group.tf_testing.id]
   subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
@@ -85,12 +89,8 @@ module "instance" {
     environment       = "staging4"
   }
 
-  rancher = {
-    environment_id = "1a5"
-    host_labels = {
-      foo = "bar"
-      bar = "baz"
-    }
+  connection = {
+    private_key = data.pass_password.ssh_key.data["id_rsa"]
   }
 }
 
@@ -102,9 +102,10 @@ resource "null_resource" "acceptance" {
   depends_on = ["module.instance"]
 
   connection {
-    host = coalesce(module.instance.this_instance_public_ipv4[count.index], (length(module.instance.this_instance_public_ipv6[count.index]) > 0 ? module.instance.this_instance_public_ipv6[count.index][0] : ""))
-    type = "ssh"
-    user = "root"
+    host        = coalesce(module.instance.this_instance_public_ipv4[count.index], (length(module.instance.this_instance_public_ipv6[count.index]) > 0 ? module.instance.this_instance_public_ipv6[count.index][0] : ""))
+    type        = "ssh"
+    user        = "terraform"
+    private_key = data.pass_password.ssh_key.data["id_rsa"]
   }
 
   provisioner "file" {
@@ -114,7 +115,7 @@ resource "null_resource" "acceptance" {
 
   provisioner "file" {
     source      = "goss.yaml"
-    destination = "/root/goss.yaml"
+    destination = "/home/terraform/goss.yaml"
   }
 
   provisioner "remote-exec" {
