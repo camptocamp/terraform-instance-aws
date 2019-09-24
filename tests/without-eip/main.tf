@@ -33,12 +33,39 @@ data "aws_ami" "ami" {
   owners = ["099720109477"]
 }
 
+data "aws_subnet" "default" {
+  id = "subnet-0ae8b71b5b9926c31"
+}
+
+resource "aws_security_group" "tf_testing" {
+  name   = "tf_testing"
+  vpc_id = data.aws_subnet.default.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "terraform-instance-aws testing"
+  }
+}
+
 module "instance" {
   source         = "../../"
   instance_count = var.instance_count
   key_pair       = var.key_pair
 
-  security_groups = []
+  security_groups = [aws_security_group.tf_testing.id]
   subnet_ids      = ["subnet-0ae8b71b5b9926c31"]
 
   ami           = data.aws_ami.ami.id
