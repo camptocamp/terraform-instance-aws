@@ -38,7 +38,7 @@ data "aws_subnet" "default" {
 }
 
 resource "aws_security_group" "tf_testing" {
-  name   = "tf_testing"
+  name   = "tf_testing_full_features"
   vpc_id = data.aws_subnet.default.vpc_id
 
   ingress {
