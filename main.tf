@@ -215,7 +215,7 @@ module "puppet-node" {
     {
       hostname = aws_instance.this[i].private_dns
       connection = {
-        host                = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip)
+        host                = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip))
         type                = lookup(var.connection, "type", null)
         user                = lookup(var.connection, "user", "terraform")
         password            = lookup(var.connection, "password", null)
@@ -264,7 +264,7 @@ module "rancher-host" {
       hostname = aws_instance.this[i].private_dns
       agent_ip = aws_instance.this[i].private_ip
       connection = {
-        host                = coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip)
+        host                = lookup(var.connection, "host", coalesce((var.eip ? aws_eip.this[i].public_ip : ""), aws_instance.this[i].public_ip, var.public_ip ? "" : aws_instance.this[i].private_ip))
         type                = lookup(var.connection, "type", null)
         user                = lookup(var.connection, "user", "terraform")
         password            = lookup(var.connection, "password", null)
