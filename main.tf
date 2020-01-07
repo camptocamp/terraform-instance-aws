@@ -40,7 +40,7 @@ EOF
 
 locals {
   private_ips_length  = length(var.private_ips)
-  nvme_instance_types = ["m5", "c5"]
+  nvme_instance_types = ["m5", "c5", "r5"]
 }
 
 resource "aws_iam_role" "this" {
@@ -198,7 +198,7 @@ resource "null_resource" "provisioner" {
     }
 
     ansible_ssh_settings {
-      connect_timeout_seconds = 60
+      connect_timeout_seconds              = 60
       insecure_no_strict_host_key_checking = true
     }
   }
