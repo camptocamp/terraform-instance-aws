@@ -13,6 +13,7 @@ data "template_cloudinit_config" "config" {
 system_info:
   default_user:
     name: terraform
+    uid: '1001'
 EOF
   }
 
