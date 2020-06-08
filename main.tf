@@ -75,7 +75,7 @@ resource "aws_instance" "this" {
   subnet_id     = length(var.subnet_ids) > 0 ? var.subnet_ids[count.index % length(var.subnet_ids)] : null
 
   # We use length(..)==0?1:var to avoid modulo: division by 0 error, because of https://github.com/hashicorp/hil/issues/50
-  private_ip             = (local.private_ips_length == 0 ? "" : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
+  private_ip             = (local.private_ips_length == 0 ? null : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
   ebs_optimized          = var.ebs_optimized
   vpc_security_group_ids = var.vpc ? var.security_groups : null
   security_groups        = var.vpc ? null : var.security_groups
