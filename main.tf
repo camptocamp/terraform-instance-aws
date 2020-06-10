@@ -148,7 +148,7 @@ resource "aws_volume_attachment" "this" {
 
 resource "null_resource" "provisioner" {
   count      = var.instance_count
-  depends_on = ["aws_instance.this", "aws_volume_attachment.this"]
+  depends_on = [aws_instance.this, aws_volume_attachment.this]
 
   connection {
     type                = lookup(var.connection, "type", null)
