@@ -126,7 +126,7 @@ resource "aws_ebs_volume" "this" {
   type              = var.additional_volumes[floor(count.index / var.instance_count)].type
 
   lifecycle {
-    ignore_changes = ["type"]
+    ignore_changes = [type]
   }
 
   tags = merge(var.tags, { Name = "${var.additional_volumes[floor(count.index / var.instance_count)].name} - ${var.tags.Name}" })
@@ -142,7 +142,7 @@ resource "aws_volume_attachment" "this" {
   force_detach = true
 
   lifecycle {
-    ignore_changes = ["instance_id", "volume_id", "skip_destroy"]
+    ignore_changes = [instance_id, volume_id, skip_destroy]
   }
 }
 
