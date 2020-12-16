@@ -21,7 +21,7 @@ EOF
     filename     = "additional.cfg"
     merge_type   = "list(append)+dict(recurse_array)+str()"
     content_type = "text/cloud-config"
-    content      = "${var.additional_user_data}"
+    content      = var.additional_user_data
   }
 
   # EBS are not always available at boot time
