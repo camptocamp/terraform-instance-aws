@@ -62,10 +62,19 @@ resource "aws_iam_role" "this" {
     ]
 }
 EOF
+
+  lifecycle {
+    ignore_changes = [name_prefix]
+  }
 }
 
 resource "aws_iam_instance_profile" "this" {
-  role = aws_iam_role.this.id
+  name_prefix = "terraform-"
+  role        = aws_iam_role.this.id
+
+  lifecycle {
+    ignore_changes = [name_prefix]
+  }
 }
 
 resource "aws_instance" "this" {
