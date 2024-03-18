@@ -94,7 +94,7 @@ resource "aws_instance" "this" {
   }
 
   lifecycle {
-    ignore_changes = [key_name, ami, user_data, root_block_device, associate_public_ip_address]
+    ignore_changes = [key_name, ami, user_data, root_block_device, associate_public_ip_address, volume_tags]
   }
 }
 
@@ -103,7 +103,6 @@ resource "aws_instance" "this" {
 
 resource "aws_eip" "this" {
   count = (var.eip ? var.instance_count : 0)
-  vpc   = var.vpc
 
   tags = var.vpc ? var.tags : null
 }
