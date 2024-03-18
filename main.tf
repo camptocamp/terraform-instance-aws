@@ -75,16 +75,17 @@ resource "aws_instance" "this" {
   subnet_id     = length(var.subnet_ids) > 0 ? var.subnet_ids[count.index % length(var.subnet_ids)] : null
 
   # We use length(..)==0?1:var to avoid modulo: division by 0 error, because of https://github.com/hashicorp/hil/issues/50
-  private_ip             = (local.private_ips_length == 0 ? null : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
-  ebs_optimized          = var.ebs_optimized
-  vpc_security_group_ids = var.vpc ? var.security_groups : null
-  security_groups        = var.vpc ? null : var.security_groups
-  key_name               = var.key_pair
-  monitoring             = var.monitoring
-  iam_instance_profile   = coalesce(var.iam_instance_profile, aws_iam_instance_profile.this.id)
-  user_data              = data.template_cloudinit_config.config[count.index].rendered
-  source_dest_check      = var.source_dest_check
-  tags                   = var.tags
+  private_ip                           = (local.private_ips_length == 0 ? null : element(split(" ", join(" ", var.private_ips)), count.index % (local.private_ips_length == 0 ? 1 : local.private_ips_length)))
+  ebs_optimized                        = var.ebs_optimized
+  vpc_security_group_ids               = var.vpc ? var.security_groups : null
+  security_groups                      = var.vpc ? null : var.security_groups
+  key_name                             = var.key_pair
+  monitoring                           = var.monitoring
+  iam_instance_profile                 = coalesce(var.iam_instance_profile, aws_iam_instance_profile.this.id)
+  user_data                            = data.template_cloudinit_config.config[count.index].rendered
+  source_dest_check                    = var.source_dest_check
+  tags                                 = var.tags
+  instance_initiated_shutdown_behavior = "stop"
 
   associate_public_ip_address = (var.public_ip || var.eip ? true : false)
 
