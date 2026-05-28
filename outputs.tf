@@ -48,7 +48,3 @@ output "this_instance_id" {
   description = "Instance's ID"
   value       = aws_instance.this[*].id
 }
-
-output "this_provisioner_id" {
-  value = null_resource.provisioner[*].id
-}

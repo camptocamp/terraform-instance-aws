@@ -12,23 +12,9 @@ variable "tags" {
   default = {}
 }
 
-variable "connection" {
-  default = {}
-}
-
 variable "region" {
   type    = string
   default = ""
-}
-
-variable "ansible_check" {
-  type    = bool
-  default = false
-}
-
-variable "vpc" {
-  type    = bool
-  default = true
 }
 
 ######
@@ -113,23 +99,4 @@ variable "private_ips" {
 variable "security_groups" {
   type    = list(string)
   default = []
-}
-
-##########
-# Rancher
-
-variable "rancher" {
-  type = object({
-    environment_id = string
-    host_labels    = map(string)
-  })
-  default = null
-}
-
-#########
-# Puppet
-
-variable "puppet" {
-  type    = map(string)
-  default = null
 }
